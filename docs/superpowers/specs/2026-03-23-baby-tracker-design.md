@@ -2,7 +2,7 @@
 
 ## 概述
 
-一款以语音输入为核心的 iOS 婴儿成长日志 App，帮助新手父母快速记录宝宝日常（喂奶、大小便、睡眠、体温等），并提供每日小结、成长趋势图表和父母寄语功能。
+一款以语音输入为核心的跨平台（iOS + Android）婴儿成长日志 App，帮助新手父母快速记录宝宝日常（喂奶、大小便、睡眠、体温等），并提供每日小结、成长趋势图表和父母寄语功能。
 
 **目标用户**：新生儿（0-12个月）父母，双人协作记录。
 
@@ -11,13 +11,14 @@
 ## 技术架构
 
 ```
-┌─────────────────────────┐
-│    iOS App (SwiftUI)     │
-│  - UI 界面               │
-│  - Apple Speech 转文字    │
-│  - 音频录制/播放          │
-│  - 照片拍摄/选择          │
-└──────────┬──────────────┘
+┌──────────────────────────────┐
+│  React Native App (Expo)      │
+│  - TypeScript + Expo Router   │
+│  - expo-speech-recognition    │
+│  - expo-av (音频录制/播放)     │
+│  - expo-image-picker (照片)   │
+│  - iOS + Android 双平台       │
+└──────────┬───────────────────┘
            │ HTTPS (REST API)
            ▼
 ┌─────────────────────────┐
@@ -41,14 +42,17 @@
 
 | 层级 | 选型 | 理由 |
 |------|------|------|
-| iOS 框架 | SwiftUI | 声明式 UI，原生体验最佳 |
-| 语音转文字 | Apple Speech Framework | 免费、离线可用 |
-| 语义解析 | Claude API | 一句话提取多条结构化记录 |
+| 移动端框架 | React Native (Expo) + TypeScript | 跨平台，一套代码出 iOS + Android，与后端技术栈统一 |
+| 路由 | Expo Router | 文件系统路由，类似 Next.js |
+| 语音转文字 | expo-speech-recognition | 底层用各平台原生引擎（iOS: Apple Speech, Android: Google Speech） |
+| 音频录制/播放 | expo-av | 跨平台音频 API |
+| 照片 | expo-image-picker | 拍照/相册选择 |
+| 图表 | react-native-chart-kit 或 victory-native | 统计趋势图 |
+| 语义解析 | Claude API（后端调用） | 一句话提取多条结构化记录 |
 | 后端框架 | Fastify + TypeScript | 高性能、类型安全 |
 | 数据库 | PostgreSQL + Prisma ORM | 关系型、ORM 方便 |
 | 认证 | JWT | 无状态、移动端友好 |
 | 文件存储 | 本地磁盘（后续可切 S3） | 先简单跑起来 |
-| 音频格式 | AAC / m4a | iOS 原生支持，文件小 |
 | 图片处理 | sharp (Node.js) | 生成缩略图，高性能 |
 
 ## 数据模型
@@ -245,25 +249,39 @@ GET    /api/babies/:id/stats/sleep           睡眠规律
 
 ## 项目结构
 
-### iOS App
+### React Native App (Expo)
 
 ```
-BabyTracker/
-├── App/
-│   └── BabyTrackerApp.swift
-├── Models/
-├── Views/
-│   ├── Home/
-│   ├── Stats/
-│   ├── Messages/
-│   ├── Profile/
-│   └── Record/
-├── Services/
-│   ├── SpeechService.swift
-│   ├── AudioRecorder.swift
-│   ├── PhotoService.swift
-│   └── APIService.swift
-└── Utils/
+baby-tracker-app/
+├── app/                          # Expo Router 文件系统路由
+│   ├── (tabs)/                   # Tab 布局
+│   │   ├── _layout.tsx           # Tab 导航配置
+│   │   ├── index.tsx             # 首页（今日总览）
+│   │   ├── stats.tsx             # 统计
+│   │   ├── messages.tsx          # 寄语
+│   │   └── profile.tsx           # 我的
+│   ├── record/                   # 记录相关页面
+│   │   ├── voice.tsx             # 语音录入
+│   │   └── confirm.tsx           # 解析确认
+│   ├── auth/                     # 认证页面
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   └── _layout.tsx               # 根布局
+├── components/                   # 可复用组件
+│   ├── DailySummary.tsx          # 每日小结卡片
+│   ├── Timeline.tsx              # 时间线
+│   ├── RecordSheet.tsx           # 记录面板（语音+文字+快捷）
+│   └── VoiceButton.tsx           # 语音大按钮
+├── services/                     # API 和设备服务
+│   ├── api.ts                    # 后端 API 请求封装
+│   ├── speech.ts                 # 语音识别封装
+│   ├── audio.ts                  # 音频录制/播放
+│   └── auth.ts                   # JWT token 管理
+├── hooks/                        # 自定义 hooks
+├── constants/                    # 主题色、配置
+├── app.json                      # Expo 配置
+├── package.json
+└── tsconfig.json
 ```
 
 ### Node.js 后端
@@ -298,7 +316,6 @@ baby-tracker-server/
 ## 未来扩展方向
 
 - Web 前端（复用同一套后端 API）
-- Android 版本
 - 推送通知（喂奶提醒等）
 - 数据导出为 PDF 成长报告
-- App Store 上架
+- App Store / Google Play 上架
