@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Gender {
+  male
+  female
+  unknown
+}
+
+enum BabyMemberRole {
+  admin
+  member
+}
+
+enum RecordType {
+  feeding_breast
+  feeding_formula
+  poop
+  pee
+  sleep
+  bath
+  temperature
+  weight
+  jaundice
+  daily_change
+}
+
+model User {
+  id            String        @id @default(uuid()) @db.Uuid
+  email         String        @unique
+  passwordHash  String        @map("password_hash")
+  nickname      String
+  avatarUrl     String?       @map("avatar_url")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  babyMembers   BabyMember[]
+  records       Record[]
+  messages      Message[]
+  photos        Photo[]
+
+  @@map("users")
+}
+
+model Baby {
+  id            String        @id @default(uuid()) @db.Uuid
+  name          String
+  gender        Gender        @default(unknown)
+  birthDate     DateTime      @map("birth_date") @db.Date
+  avatarUrl     String?       @map("avatar_url")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  members       BabyMember[]
+  records       Record[]
+  messages      Message[]
+  photos        Photo[]
+
+  @@map("babies")
+}
+
+model BabyMember {
+  babyId        String        @map("baby_id") @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  role          BabyMemberRole @default(member)
+  inviteCode    String?       @unique @map("invite_code")
+  joinedAt      DateTime      @default(now()) @map("joined_at")
+
+  baby          Baby          @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([babyId, userId])
+  @@map("baby_members")
+}
+
+model Record {
+  id            String        @id @default(uuid()) @db.Uuid
+  babyId        String        @map("baby_id") @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  type          RecordType
+  recordedAt    DateTime      @map("recorded_at")
+  data          Json          @default("{}")
+  note          String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  baby          Baby          @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos        Photo[]
+
+  @@index([babyId, recordedAt])
+  @@map("records")
+}
+
+model Message {
+  id                    String    @id @default(uuid()) @db.Uuid
+  babyId                String    @map("baby_id") @db.Uuid
+  userId                String    @map("user_id") @db.Uuid
+  textContent           String?   @map("text_content")
+  audioUrl              String?   @map("audio_url")
+  audioDurationSeconds  Float?    @map("audio_duration_seconds")
+  recordedAt            DateTime  @map("recorded_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  baby                  Baby      @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos                Photo[]
+
+  @@index([babyId, recordedAt])
+  @@map("messages")
+}
+
+model Photo {
+  id              String    @id @default(uuid()) @db.Uuid
+  babyId          String    @map("baby_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  recordId        String?   @map("record_id") @db.Uuid
+  messageId       String?   @map("message_id") @db.Uuid
+  url             String
+  thumbnailUrl    String    @map("thumbnail_url")
+  uploadedAt      DateTime  @default(now()) @map("uploaded_at")
+
+  baby            Baby      @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  record          Record?   @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  message         Message?  @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@index([babyId, uploadedAt])
+  @@map("photos")
+}
