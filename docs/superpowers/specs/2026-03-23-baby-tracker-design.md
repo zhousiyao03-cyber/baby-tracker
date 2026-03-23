@@ -105,7 +105,7 @@
 - `feeding_formula`：配方奶 — `{ amount_ml }`
 - `poop`：大便 — `{ color, texture }`
 - `pee`：小便 — `{}`
-- `sleep`：睡眠 — `{ start_time, end_time }`
+- `sleep`：睡眠 — `{ end_time }`（`recorded_at` 作为入睡时间，`end_time` 为醒来时间）
 - `bath`：洗澡 — `{ duration_minutes, water_temp? }`
 - `temperature`：体温 — `{ value, method: "ear" | "forehead" | "armpit" }`
 - `weight`：体重 — `{ value_g }`
@@ -131,8 +131,8 @@
 | id | UUID | 主键 |
 | baby_id | UUID | 外键 → Baby |
 | user_id | UUID | 外键 → User |
-| record_id | UUID? | 外键 → Record（可选） |
-| message_id | UUID? | 外键 → Message（可选） |
+| record_id | UUID? | 外键 → Record（可选，两者均为空表示独立照片） |
+| message_id | UUID? | 外键 → Message（可选，两者均为空表示独立照片） |
 | url | String | 原图路径 |
 | thumbnail_url | String | 缩略图路径 |
 | uploaded_at | DateTime | 上传时间 |
@@ -161,7 +161,8 @@ POST   /api/babies/join             通过邀请码加入
 
 ```
 POST   /api/babies/:id/records              手动创建记录
-POST   /api/babies/:id/records/voice         语音/文字 → LLM 解析 → 创建记录
+POST   /api/babies/:id/records/voice         语音/文字 → LLM 解析 → 返回预览（不保存）
+POST   /api/babies/:id/records/voice/confirm  用户确认后批量保存解析结果
 GET    /api/babies/:id/records?date=xxx      按日期查询记录
 GET    /api/babies/:id/records/summary       每日小结（汇总统计）
 PUT    /api/records/:id                      修改记录
@@ -190,6 +191,7 @@ DELETE /api/photos/:id                       删除照片
 GET    /api/babies/:id/stats/feeding         喂奶统计（日均量、趋势）
 GET    /api/babies/:id/stats/weight          体重增长曲线
 GET    /api/babies/:id/stats/jaundice        黄疸趋势
+GET    /api/babies/:id/stats/sleep           睡眠规律
 ```
 
 ## 语音解析流程
