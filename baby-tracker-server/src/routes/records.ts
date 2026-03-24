@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { authenticate, requireBabyAccess } from "../middleware/auth.js";
 import { prisma } from "../lib/prisma.js";
+import { parseVoiceText } from "../services/llm.js";
 
 export async function recordsRoutes(app: FastifyInstance) {
   // 创建记录
@@ -177,6 +178,56 @@ export async function recordsRoutes(app: FastifyInstance) {
       if (note !== undefined) updateData.note = note;
 
       return prisma.record.update({ where: { id }, data: updateData });
+    }
+  );
+
+  // 语音解析 — 返回预览（不保存）
+  app.post(
+    "/api/babies/:babyId/records/voice",
+    { preHandler: [authenticate, requireBabyAccess] },
+    async (request) => {
+      const { babyId } = request.params as { babyId: string };
+      const { text } = request.body as { text: string };
+
+      const baby = await prisma.baby.findUnique({ where: { id: babyId } });
+      const currentTime = new Date().toISOString();
+      const parsed = await parseVoiceText(text, baby!.name, currentTime);
+
+      return { parsed };
+    }
+  );
+
+  // 确认保存解析结果
+  app.post(
+    "/api/babies/:babyId/records/voice/confirm",
+    { preHandler: [authenticate, requireBabyAccess] },
+    async (request, reply) => {
+      const { babyId } = request.params as { babyId: string };
+      const { records: recordsData } = request.body as {
+        records: Array<{
+          type: string;
+          recordedAt: string;
+          data: any;
+          note?: string;
+        }>;
+      };
+
+      const created = await prisma.$transaction(
+        recordsData.map((r) =>
+          prisma.record.create({
+            data: {
+              babyId,
+              userId: request.userId,
+              type: r.type as any,
+              recordedAt: new Date(r.recordedAt),
+              data: r.data,
+              note: r.note,
+            },
+          })
+        )
+      );
+
+      return reply.status(201).send(created);
     }
   );
 

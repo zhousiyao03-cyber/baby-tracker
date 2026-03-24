@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Baby Tracker",
+    "slug": "baby-tracker",
+    "scheme": "baby-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF5F5"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.babytracker.app",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "需要语音识别权限来记录宝宝日常",
+        "NSMicrophoneUsageDescription": "需要麦克风权限来录制语音"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFF5F5"
+      },
+      "package": "com.babytracker.app",
+      "permissions": ["RECORD_AUDIO"]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "需要麦克风权限来录制语音",
+          "speechRecognitionPermission": "需要语音识别权限来记录宝宝日常"
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "需要麦克风权限来录制语音寄语"
+        }
+      ],
+      "expo-secure-store"
+    ]
+  }
+}
