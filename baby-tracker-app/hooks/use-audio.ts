@@ -1,5 +1,8 @@
-import { useState, useRef } from "react";
-import { Audio } from "expo-av";
+import { useState } from "react";
+import { Alert } from "react-native";
+
+// TODO: expo-av 与 SDK 55 存在兼容性问题（EXEventEmitter.h 缺失），
+// 暂时使用 stub 实现，待 expo-av 更新后恢复
 
 interface UseAudioReturn {
   isRecording: boolean;
@@ -12,70 +15,23 @@ interface UseAudioReturn {
 }
 
 export function useAudio(): UseAudioReturn {
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const recordingRef = useRef<Audio.Recording | null>(null);
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isRecording] = useState(false);
+  const [recordingDuration] = useState(0);
+  const [isPlaying] = useState(false);
 
   const startRecording = async () => {
-    const permission = await Audio.requestPermissionsAsync();
-    if (!permission.granted) throw new Error("需要麦克风权限");
-
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: true,
-      playsInSilentModeIOS: true,
-    });
-
-    const { recording } = await Audio.Recording.createAsync(
-      Audio.RecordingOptionsPresets.HIGH_QUALITY
-    );
-    recordingRef.current = recording;
-    setIsRecording(true);
-    setRecordingDuration(0);
-    timerRef.current = setInterval(() => {
-      setRecordingDuration((d) => d + 1);
-    }, 1000);
+    Alert.alert("提示", "音频录制功能即将上线");
   };
 
-  const stopRecording = async () => {
-    if (!recordingRef.current) throw new Error("No recording");
-    if (timerRef.current) clearInterval(timerRef.current);
-
-    await recordingRef.current.stopAndUnloadAsync();
-    const uri = recordingRef.current.getURI()!;
-    const duration = recordingDuration;
-    recordingRef.current = null;
-    setIsRecording(false);
-    setRecordingDuration(0);
-
-    await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-    return { uri, duration };
+  const stopRecording = async (): Promise<{ uri: string; duration: number }> => {
+    return { uri: "", duration: 0 };
   };
 
-  const playAudio = async (uri: string, headers?: Record<string, string>) => {
-    await stopPlaying();
-    const { sound } = await Audio.Sound.createAsync(
-      { uri, headers },
-      { shouldPlay: true }
-    );
-    soundRef.current = sound;
-    setIsPlaying(true);
-    sound.setOnPlaybackStatusUpdate((status) => {
-      if (status.isLoaded && status.didJustFinish) {
-        setIsPlaying(false);
-      }
-    });
+  const playAudio = async () => {
+    Alert.alert("提示", "音频播放功能即将上线");
   };
 
-  const stopPlaying = async () => {
-    if (soundRef.current) {
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
-    }
-    setIsPlaying(false);
-  };
+  const stopPlaying = async () => {};
 
   return {
     isRecording,

@@ -38,12 +38,6 @@
           "speechRecognitionPermission": "需要语音识别权限来记录宝宝日常"
         }
       ],
-      [
-        "expo-av",
-        {
-          "microphonePermission": "需要麦克风权限来录制语音寄语"
-        }
-      ],
       "expo-secure-store"
     ]
   }
