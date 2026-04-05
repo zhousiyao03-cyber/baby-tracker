@@ -81,15 +81,19 @@ export async function recordsRoutes(app: FastifyInstance) {
 
       const summary: any = {
         date,
-        feedingFormula: { count: 0, totalMl: 0 },
-        feedingBreast: { count: 0, totalMinutes: 0 },
-        poop: { count: 0, details: [] },
-        pee: { count: 0 },
-        sleep: { count: 0, totalHours: 0 },
-        bath: { count: 0 },
-        temperature: null,
-        weight: null,
-        jaundice: null,
+        formulaTotalMl: 0,
+        formulaCount: 0,
+        breastTotalMinutes: 0,
+        breastCount: 0,
+        poopCount: 0,
+        poopDetails: [],
+        peeCount: 0,
+        sleepTotalHours: 0,
+        sleepCount: 0,
+        bathCount: 0,
+        latestTemperature: null,
+        latestWeight: null,
+        latestJaundice: null,
         dailyChange: null,
       };
 
@@ -97,39 +101,39 @@ export async function recordsRoutes(app: FastifyInstance) {
         const data = r.data as any;
         switch (r.type) {
           case "feeding_formula":
-            summary.feedingFormula.count++;
-            summary.feedingFormula.totalMl += data.amount_ml || 0;
+            summary.formulaCount++;
+            summary.formulaTotalMl += data.amount_ml || 0;
             break;
           case "feeding_breast":
-            summary.feedingBreast.count++;
-            summary.feedingBreast.totalMinutes += data.duration_minutes || 0;
+            summary.breastCount++;
+            summary.breastTotalMinutes += data.duration_minutes || 0;
             break;
           case "poop":
-            summary.poop.count++;
-            summary.poop.details.push({ color: data.color, texture: data.texture });
+            summary.poopCount++;
+            summary.poopDetails.push({ color: data.color, texture: data.texture });
             break;
           case "pee":
-            summary.pee.count++;
+            summary.peeCount++;
             break;
           case "sleep":
-            summary.sleep.count++;
+            summary.sleepCount++;
             if (data.end_time) {
               const sleepStart = r.recordedAt.getTime();
               const sleepEnd = new Date(data.end_time).getTime();
-              summary.sleep.totalHours += (sleepEnd - sleepStart) / 3600000;
+              summary.sleepTotalHours += (sleepEnd - sleepStart) / 3600000;
             }
             break;
           case "bath":
-            summary.bath.count++;
+            summary.bathCount++;
             break;
           case "temperature":
-            summary.temperature = { value: data.value, method: data.method };
+            summary.latestTemperature = data.value;
             break;
           case "weight":
-            summary.weight = { value_g: data.value_g };
+            summary.latestWeight = data.value_g;
             break;
           case "jaundice":
-            summary.jaundice = { value: data.value, position: data.position };
+            summary.latestJaundice = data.value;
             break;
           case "daily_change":
             summary.dailyChange = data.description;

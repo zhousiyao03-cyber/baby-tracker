@@ -1,7 +1,10 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { env } from "../config.js";
 
-const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+const client = new OpenAI({
+  apiKey: env.OPENAI_API_KEY,
+  baseURL: env.OPENAI_BASE_URL,
+});
 
 interface ParsedRecord {
   type: string;
@@ -40,18 +43,22 @@ export async function parseVoiceText(
 - 如果无法识别任何记录，返回空数组 []
 - 只返回 JSON，不要其他文字`;
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+  const response = await client.chat.completions.create({
+    model: "gpt-5.4",
     max_tokens: 1024,
-    system: systemPrompt,
-    messages: [{ role: "user", content: text }],
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: text },
+    ],
   });
 
-  const content = response.content[0];
-  if (content.type !== "text") return [];
+  const content = response.choices[0]?.message?.content;
+  if (!content) return [];
 
   try {
-    const parsed = JSON.parse(content.text);
+    // Strip markdown code fences if present
+    const cleaned = content.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "");
+    const parsed = JSON.parse(cleaned);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];

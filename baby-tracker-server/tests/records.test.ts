@@ -435,19 +435,19 @@ describe("Records API", () => {
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
       expect(body.date).toBe(date);
-      expect(body.feedingFormula.count).toBe(2);
-      expect(body.feedingFormula.totalMl).toBe(220);
-      expect(body.feedingBreast.count).toBe(1);
-      expect(body.feedingBreast.totalMinutes).toBe(15);
-      expect(body.poop.count).toBe(1);
-      expect(body.poop.details).toHaveLength(1);
-      expect(body.poop.details[0]).toMatchObject({ color: "yellow", texture: "soft" });
-      expect(body.pee.count).toBe(1);
-      expect(body.sleep.count).toBe(1);
-      expect(body.sleep.totalHours).toBeCloseTo(2, 1);
-      expect(body.bath.count).toBe(1);
-      expect(body.temperature).toMatchObject({ value: 37.2, method: "armpit" });
-      expect(body.weight).toMatchObject({ value_g: 4500 });
+      expect(body.formulaCount).toBe(2);
+      expect(body.formulaTotalMl).toBe(220);
+      expect(body.breastCount).toBe(1);
+      expect(body.breastTotalMinutes).toBe(15);
+      expect(body.poopCount).toBe(1);
+      expect(body.poopDetails).toHaveLength(1);
+      expect(body.poopDetails[0]).toMatchObject({ color: "yellow", texture: "soft" });
+      expect(body.peeCount).toBe(1);
+      expect(body.sleepCount).toBe(1);
+      expect(body.sleepTotalHours).toBeCloseTo(2, 1);
+      expect(body.bathCount).toBe(1);
+      expect(body.latestTemperature).toBe(37.2);
+      expect(body.latestWeight).toBe(4500);
     });
 
     it("returns zeroed summary when no records exist for the date", async () => {
@@ -462,11 +462,11 @@ describe("Records API", () => {
 
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
-      expect(body.feedingFormula.count).toBe(0);
-      expect(body.feedingFormula.totalMl).toBe(0);
-      expect(body.pee.count).toBe(0);
-      expect(body.temperature).toBeNull();
-      expect(body.weight).toBeNull();
+      expect(body.formulaCount).toBe(0);
+      expect(body.formulaTotalMl).toBe(0);
+      expect(body.peeCount).toBe(0);
+      expect(body.latestTemperature).toBeNull();
+      expect(body.latestWeight).toBeNull();
     });
 
     it("only counts records for the specified date, not other days", async () => {
@@ -492,7 +492,7 @@ describe("Records API", () => {
 
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
-      expect(body.pee.count).toBe(1);
+      expect(body.peeCount).toBe(1);
     });
 
     it("returns 401 when no token is provided", async () => {
